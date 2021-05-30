@@ -1,8 +1,9 @@
 package cgroups
 
 import (
+	"fmt"
+
 	"github.com/YasinZhangX/dockerSrc/cgroups/subsystems"
-	"github.com/sirupsen/logrus"
 )
 
 type CgroupManager struct {
@@ -35,7 +36,7 @@ func (c *CgroupManager) Set(res *subsystems.ResourceConfig) error {
 func (c *CgroupManager) Destory() error {
 	for _, subSysIns := range subsystems.SubsystemsIns {
 		if err := subSysIns.Remove(c.Path); err != nil {
-			logrus.Warnf("remove cgroup fail %v", err)
+			fmt.Printf("remove cgroup fail %v\r\n", err)
 		}
 	}
 

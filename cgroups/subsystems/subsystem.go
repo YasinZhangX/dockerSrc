@@ -24,5 +24,7 @@ type Subsystem interface {
 var (
 	SubsystemsIns = []Subsystem{
 		&MemorySubsystem{},
+		&CpuSubSystem{},
+		&CpusetSubSystem{},
 	}
 )
