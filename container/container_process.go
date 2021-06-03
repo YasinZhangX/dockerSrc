@@ -28,6 +28,7 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File) {
 	}
 	// 传入管道文件读取端的句柄
 	cmd.ExtraFiles = []*os.File{readPipe}
+	cmd.Dir = "/home/yasin/workspace/busybox"
 
 	return cmd, writePipe
 }
