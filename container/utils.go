@@ -1,4 +1,4 @@
-package main
+package container
 
 import (
 	"math/rand"
@@ -12,7 +12,9 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-func RandStringBytesMaskImpr(n int) string {
+var ContainerId = RandString_BytesMaskImpr(6)
+
+func RandString_BytesMaskImpr(n int) string {
 	rand.Seed(time.Now().UnixNano())
 
 	b := make([]byte, n)

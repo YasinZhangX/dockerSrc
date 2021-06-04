@@ -15,7 +15,7 @@ var runCommand = cli.Command{
 					mydocker run -ti [command] -m [memory_limit] -cpushare [cpu_share] -cpuset [cpuset]`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
-			Name:  "ti",
+			Name:  "it",
 			Usage: "enable tty",
 		},
 		cli.StringFlag{
@@ -30,6 +30,10 @@ var runCommand = cli.Command{
 			Name:  "cpuset",
 			Usage: "cpuset limit",
 		},
+		cli.StringFlag{
+			Name:  "v",
+			Usage: "volume",
+		},
 	},
 	Action: func(context *cli.Context) error {
 		if len(context.Args()) < 1 {
@@ -40,14 +44,15 @@ var runCommand = cli.Command{
 		for _, arg := range context.Args() {
 			cmdArray = append(cmdArray, arg)
 		}
-		tty := context.Bool("ti")
+		tty := context.Bool("it")
 		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("m"),
 			CpuSet:      context.String("cpuset"),
 			CpuShare:    context.String("cpushare"),
 		}
+		volumeConfigs := context.String("v")
 
-		Run(tty, cmdArray, resConf)
+		Run(tty, volumeConfigs, resConf, cmdArray)
 		return nil
 	},
 }
