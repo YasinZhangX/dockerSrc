@@ -10,9 +10,8 @@ import (
 )
 
 var runCommand = cli.Command{
-	Name: "run",
-	Usage: `Create a container with namespace and cgroups limit
-					mydocker run -ti [command] -m [memory_limit] -cpushare [cpu_share] -cpuset [cpuset]`,
+	Name:  "run",
+	Usage: `Create a container with namespace and cgroups limit`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "it",
@@ -34,25 +33,44 @@ var runCommand = cli.Command{
 			Name:  "v",
 			Usage: "volume",
 		},
+		cli.BoolFlag{
+			Name:  "d",
+			Usage: "detach container",
+		},
+		cli.StringFlag{
+			Name:  "name",
+			Usage: "container name",
+		},
 	},
 	Action: func(context *cli.Context) error {
 		if len(context.Args()) < 1 {
 			return fmt.Errorf("missing container command")
 		}
 
-		var cmdArray []string
-		for _, arg := range context.Args() {
-			cmdArray = append(cmdArray, arg)
-		}
 		tty := context.Bool("it")
+
+		detach := context.Bool("d")
+		if tty && detach {
+			return fmt.Errorf("it and d parameter can not both provided")
+		}
+
 		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("m"),
 			CpuSet:      context.String("cpuset"),
 			CpuShare:    context.String("cpushare"),
 		}
+
 		volumeConfigs := context.String("v")
 
-		Run(tty, volumeConfigs, resConf, cmdArray)
+		containerName := context.String("name")
+
+		// user command
+		var cmdArray []string
+		for _, arg := range context.Args() {
+			cmdArray = append(cmdArray, arg)
+		}
+
+		Run(tty, volumeConfigs, resConf, containerName, cmdArray)
 		return nil
 	},
 }
@@ -78,5 +96,18 @@ var commitCommand = cli.Command{
 		imageName := context.Args().Get(1)
 		CommitContainer(containerId, imageName)
 		return nil
+	},
+}
+
+var rmCommand = cli.Command{
+	Name:  "rm",
+	Usage: "remove a container",
+	Action: func(context *cli.Context) error {
+		if len(context.Args()) < 1 {
+			return fmt.Errorf("missing container id")
+		}
+
+		containerId := context.Args().Get(0)
+		return RemoveContainer(containerId)
 	},
 }

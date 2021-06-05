@@ -11,6 +11,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	RUNNING             string = "running"
+	STOP                string = "stopped"
+	Exit                string = "exited"
+	DefaultInfoLocation string = "/root/data/%s/"
+	ConfigFileName      string = "config.json"
+)
+
+type ContainerInfo struct {
+	Pid        string `json:"pid"`        // 容器的 init 进程在宿主机上的 PID
+	Id         string `json:"id"`         // 容器 Id
+	Name       string `json:"name"`       // 容器名
+	Command    string `json:"command"`    // 容器内init运行的命令
+	CreateTime string `json:"createTime"` // 创建时间
+	Status     string `json:"status"`     // 容器的状态
+}
+
 func NewParentProcess(tty bool, volumeConfigs string) (*exec.Cmd, *os.File) {
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
