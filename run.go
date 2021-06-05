@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"os/signal"
+	// "os/signal"
 	"path/filepath"
 	"strings"
 
@@ -13,10 +13,6 @@ import (
 )
 
 func Run(tty bool, volumeConfigs string, res *subsystems.ResourceConfig, containerName string, cmdArray []string) {
-	// 加入 channel 接受系统信号，实现优雅退出
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-
 	// 初始化父进程和写管道
 	parent, writePipe := container.NewParentProcess(tty, volumeConfigs)
 	if parent == nil {
