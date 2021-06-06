@@ -24,7 +24,7 @@ func ListContainers() {
 
 	var containers []*container.ContainerInfo
 	for _, dir := range dirs {
-		tmpContainer, err := getContainerInfo(dir)
+		tmpContainer, err := getContainerInfoInDir(dir)
 		if err != nil {
 			log.Errorf("Get container info error %v", err)
 			continue
@@ -46,7 +46,7 @@ func ListContainers() {
 	}
 }
 
-func getContainerInfo(dir fs.DirEntry) (*container.ContainerInfo, error) {
+func getContainerInfoInDir(dir fs.DirEntry) (*container.ContainerInfo, error) {
 	containerId := dir.Name()
 
 	r, _ := regexp.Compile(`^\d{6}$`)
