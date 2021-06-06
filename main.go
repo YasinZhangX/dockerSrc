@@ -21,6 +21,7 @@ func main() {
 		runCommand,
 		commitCommand,
 		rmCommand,
+		listCommand,
 	}
 
 	app.Before = func(context *cli.Context) error {

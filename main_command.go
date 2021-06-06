@@ -111,3 +111,12 @@ var rmCommand = cli.Command{
 		return RemoveContainer(containerId)
 	},
 }
+
+var listCommand = cli.Command{
+	Name:  "ps",
+	Usage: "list all the containers",
+	Action: func(context *cli.Context) error {
+		ListContainers()
+		return nil
+	},
+}

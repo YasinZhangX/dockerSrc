@@ -14,6 +14,10 @@ func RemoveContainer(containerId string) error {
 		return err
 	}
 
+	if err := deleteContainerInfo(containerId); err != nil {
+		return err
+	}
+
 	if err := deleteFileSystem(containerId); err != nil {
 		return err
 	}
@@ -25,6 +29,11 @@ func RemoveContainer(containerId string) error {
 func deleteCgroup(containerId string) error {
 	cgroupManager := cgroups.NewCgroupManager(strings.Join([]string{"mydocker-cgroup", containerId}, "_"))
 	return cgroupManager.Destory()
+}
+
+// 删除容器信息文件
+func deleteContainerInfo(containerId string) error {
+	return DeleteContainerInfo(containerId)
 }
 
 // 删除文件系统

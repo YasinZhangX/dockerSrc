@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -15,17 +14,18 @@ const (
 	RUNNING             string = "running"
 	STOP                string = "stopped"
 	Exit                string = "exited"
-	DefaultInfoLocation string = "/root/data/%s/"
+	DefaultInfoLocation string = "/root/data/%s"
 	ConfigFileName      string = "config.json"
 )
 
 type ContainerInfo struct {
-	Pid        string `json:"pid"`        // 容器的 init 进程在宿主机上的 PID
-	Id         string `json:"id"`         // 容器 Id
-	Name       string `json:"name"`       // 容器名
-	Command    string `json:"command"`    // 容器内init运行的命令
-	CreateTime string `json:"createTime"` // 创建时间
-	Status     string `json:"status"`     // 容器的状态
+	Pid          string   `json:"pid"`        // 容器的 init 进程在宿主机上的 PID
+	Id           string   `json:"id"`         // 容器 Id
+	Name         string   `json:"name"`       // 容器名
+	Command      string   `json:"command"`    // 容器内init运行的命令
+	VoluemConfig []string `json:"volumes"`    // 容器 volume 信息
+	CreateTime   string   `json:"createTime"` // 创建时间
+	Status       string   `json:"status"`     // 容器的状态
 }
 
 func NewParentProcess(tty bool, volumeConfigs string) (*exec.Cmd, *os.File) {
@@ -90,10 +90,10 @@ func NewWorkspace(imgUrl string, dataUrl string, mountUrl string, volumeConfigs 
 	}
 
 	if len(volumeConfigs) != 0 {
-		volumeConfigArr := volumeConfigExtract(volumeConfigs)
+		volumeConfigArr := VolumeConfigExtract(volumeConfigs)
 		if len(volumeConfigArr) > 0 {
 			for _, conf := range volumeConfigArr {
-				if volumeUrls, err := volumeUrlExtract(conf); err == nil {
+				if volumeUrls, err := VolumeUrlExtract(conf); err == nil {
 					log.Infof("volume mount: %q", volumeUrls)
 					err = mountVolume(mountUrl, volumeUrls)
 					if err != nil {
@@ -114,7 +114,7 @@ func NewWorkspace(imgUrl string, dataUrl string, mountUrl string, volumeConfigs 
 func createLowerLayer(imgUrl string, dataUrl string) error {
 	lowerDir := filepath.Join(imgUrl, "busybox")
 	busyboxTarURL := "/root/busybox.tar"
-	exist, err := pathExists(lowerDir)
+	exist, err := PathExists(lowerDir)
 	if err != nil {
 		return fmt.Errorf("fail to judge whether dir %s exists: %v", lowerDir, err)
 	} else {
@@ -169,10 +169,10 @@ func createMountPoint(imgUrl string, dataUrl string, mountUrl string) error {
 func DeleteWorkspace(dataUrl string, mountUrl string, volumeConfigs string) error {
 	// process volume configs
 	if len(volumeConfigs) != 0 {
-		volumeConfigArr := volumeConfigExtract(volumeConfigs)
+		volumeConfigArr := VolumeConfigExtract(volumeConfigs)
 		if len(volumeConfigArr) > 0 {
 			for _, conf := range volumeConfigArr {
-				if volumeUrls, err := volumeUrlExtract(conf); err == nil {
+				if volumeUrls, err := VolumeUrlExtract(conf); err == nil {
 					log.Infof("volume umount: %q", volumeUrls)
 					err = umountVolume(mountUrl, volumeUrls)
 					if err != nil {
@@ -250,43 +250,10 @@ func deleteUpperDir(dataUrl string) error {
 	return nil
 }
 
-func pathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
-}
-
-func volumeConfigExtract(volumeConfigs string) []string {
-	old := strings.Split(volumeConfigs, ",")
-
-	var new []string
-	for _, conf := range old {
-		if len(conf) > 0 {
-			new = append(new, conf)
-		}
-	}
-
-	return new
-}
-
-func volumeUrlExtract(volumeConfig string) ([]string, error) {
-	volumeUrls := strings.Split(volumeConfig, ":")
-	if len(volumeUrls) == 2 && len(volumeUrls[0]) != 0 && len(volumeUrls[1]) != 0 {
-		return volumeUrls, nil
-	} else {
-		return nil, fmt.Errorf("volume url extract error. volume config is %s", volumeConfig)
-	}
-}
-
 func mountVolume(mountUrl string, volumeUrls []string) error {
 	// check parent url
 	parentUrl := volumeUrls[0]
-	if exist, err := pathExists(parentUrl); err == nil {
+	if exist, err := PathExists(parentUrl); err == nil {
 		if !exist {
 			if err := os.Mkdir(parentUrl, 0777); err != nil {
 				return fmt.Errorf("mkdir %s error: %v", parentUrl, err)
@@ -299,7 +266,7 @@ func mountVolume(mountUrl string, volumeUrls []string) error {
 	// check container url
 	containerUrl := volumeUrls[1]
 	containerVolumeUrl := filepath.Join(mountUrl, containerUrl)
-	if exist, err := pathExists(containerVolumeUrl); err == nil {
+	if exist, err := PathExists(containerVolumeUrl); err == nil {
 		if !exist {
 			if err := os.Mkdir(containerVolumeUrl, 0777); err != nil {
 				return fmt.Errorf("mkdir %s error: %v", containerVolumeUrl, err)
