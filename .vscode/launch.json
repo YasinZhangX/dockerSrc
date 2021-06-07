@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}",
-            "args": ["run", "-ti", "-m", "200m", "ls", "-l"]
+            "args": ["run", "-it", "-m", "200m", "ls", "-l"]
         },
         {
             "name": "Launch Package(ps)",

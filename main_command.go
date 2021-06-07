@@ -17,6 +17,10 @@ var runCommand = cli.Command{
 			Name:  "it",
 			Usage: "enable tty",
 		},
+		cli.BoolFlag{
+			Name:  "rm",
+			Usage: "remove docker after exit",
+		},
 		cli.StringFlag{
 			Name:  "m",
 			Usage: "memory limit",
@@ -49,6 +53,8 @@ var runCommand = cli.Command{
 
 		tty := context.Bool("it")
 
+		exitRemove := context.Bool("rm")
+
 		detach := context.Bool("d")
 		if tty && detach {
 			return fmt.Errorf("it and d parameter can not both provided")
@@ -70,7 +76,7 @@ var runCommand = cli.Command{
 			cmdArray = append(cmdArray, arg)
 		}
 
-		Run(tty, volumeConfigs, resConf, containerName, cmdArray)
+		Run(tty, exitRemove, volumeConfigs, resConf, containerName, cmdArray)
 		return nil
 	},
 }
@@ -118,5 +124,18 @@ var listCommand = cli.Command{
 	Action: func(context *cli.Context) error {
 		ListContainers()
 		return nil
+	},
+}
+
+var logCommand = cli.Command{
+	Name:  "log",
+	Usage: "print logs of a container",
+	Action: func(context *cli.Context) error {
+		if len(context.Args()) < 1 {
+			return fmt.Errorf("please input container ID")
+		}
+
+		containerId := context.Args().Get(0)
+		return printContainerLog(containerId)
 	},
 }

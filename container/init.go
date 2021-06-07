@@ -73,6 +73,15 @@ func setUpMount() {
 	syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
 
 	syscall.Mount("tmpfs", "/dev", "tmpfs", syscall.MS_NOSUID|syscall.MS_STRICTATIME, "mode=755")
+
+	cmd := exec.Command("mknod", "-m", "0666", "/dev/null", "c", "1", "3")
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		log.Errorf("create /dev/null error: %v", err)
+		return
+	}
 }
 
 // 改变当前 root 文件系统

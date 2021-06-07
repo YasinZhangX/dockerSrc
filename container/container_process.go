@@ -16,6 +16,7 @@ const (
 	Exit                string = "exited"
 	DefaultInfoLocation string = "/root/data/%s"
 	ConfigFileName      string = "config.json"
+	ContainerLogFile    string = "container.log"
 )
 
 type ContainerInfo struct {
@@ -45,7 +46,22 @@ func NewParentProcess(tty bool, volumeConfigs string) (*exec.Cmd, *os.File) {
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+	} else {
+		// 配置日志文件
+		logDir := fmt.Sprintf(DefaultInfoLocation, ContainerId)
+		if err := os.MkdirAll(logDir, 0622); err != nil {
+			log.Errorf("mkdir %s error: %v", logDir, err)
+			return nil, nil
+		}
+		stdLogFilePath := filepath.Join(logDir, ContainerLogFile)
+		stdLogFile, err := os.Create(stdLogFilePath)
+		if err != nil {
+			log.Errorf("create file %s error: %v", stdLogFilePath, err)
+			return nil, nil
+		}
+		cmd.Stdout = stdLogFile
 	}
+
 	// 传入管道文件读取端的句柄
 	cmd.ExtraFiles = []*os.File{readPipe}
 
@@ -70,7 +86,7 @@ func NewPipe() (*os.File, *os.File, error) {
 
 func NewWorkspace(imgUrl string, dataUrl string, mountUrl string, volumeConfigs string) error {
 	// create container data directory
-	if err := os.Mkdir(dataUrl, 0777); err != nil {
+	if err := os.MkdirAll(dataUrl, 0777); err != nil {
 		return fmt.Errorf("mkdir %s error: %v", dataUrl, err)
 	}
 

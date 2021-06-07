@@ -1,9 +1,12 @@
 package container
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -53,16 +56,16 @@ func randLetterString(n int) string {
 	rand.Seed(time.Now().UnixNano())
 
 	b := make([]byte, n)
-	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
-	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
+	// A rand.Int63() generates 63 random bits, enough for nameIdxMax letters!
+	for i, cache, remain := n-1, rand.Int63(), nameIdxMax; i >= 0; {
 		if remain == 0 {
-			cache, remain = rand.Int63(), letterIdxMax
+			cache, remain = rand.Int63(), nameIdxMax
 		}
-		if idx := int(cache & letterIdxMask); idx < len(nameBytes) {
+		if idx := int(cache & nameIdxMask); idx < len(nameBytes) {
 			b[i] = nameBytes[idx]
 			i--
 		}
-		cache >>= letterIdxBits
+		cache >>= nameIdxBits
 		remain--
 	}
 	return string(b)
@@ -99,4 +102,47 @@ func VolumeUrlExtract(volumeConfig string) ([]string, error) {
 	} else {
 		return nil, fmt.Errorf("volume url extract error. volume config is %s", volumeConfig)
 	}
+}
+
+func GetContainerInfo(containerId string) (*ContainerInfo, error) {
+	configFileDir := fmt.Sprintf(DefaultInfoLocation, containerId)
+	configFileName := filepath.Join(configFileDir, ConfigFileName)
+	content, err := ioutil.ReadFile(configFileName)
+	if err != nil {
+		err = fmt.Errorf("read file %s error: %v", configFileName, err)
+		return nil, err
+	}
+
+	var containerInfo ContainerInfo
+	if err := json.Unmarshal(content, &containerInfo); err != nil {
+		err = fmt.Errorf("json unmarshal error: %v", err)
+		return nil, err
+	}
+
+	return &containerInfo, nil
+}
+
+func RecordContainerInfo(containerInfo *ContainerInfo) error {
+	jsonBytes, err := json.Marshal(containerInfo)
+	if err != nil {
+		return fmt.Errorf("json marshal error: %v", err)
+	}
+	jsonStr := string(jsonBytes)
+
+	dirUrl := fmt.Sprintf(DefaultInfoLocation, ContainerId)
+	if err := os.MkdirAll(dirUrl, 0622); err != nil {
+		return fmt.Errorf("mkdir %s error: %v", dirUrl, err)
+	}
+
+	fileName := filepath.Join(dirUrl, ConfigFileName)
+	file, err := os.Create(fileName)
+	if err != nil {
+		return fmt.Errorf("create file %s error: %v", fileName, err)
+	}
+	defer file.Close()
+	if _, err := file.WriteString(jsonStr); err != nil {
+		return fmt.Errorf("file write error: %v", err)
+	}
+
+	return nil
 }

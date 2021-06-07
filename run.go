@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(tty bool, volumeConfigs string, res *subsystems.ResourceConfig, containerName string, cmdArray []string) {
+func Run(tty bool, exitRemove bool, volumeConfigs string, res *subsystems.ResourceConfig, containerName string, cmdArray []string) {
 	// 初始化父进程和写管道
 	parent, writePipe := container.NewParentProcess(tty, volumeConfigs)
 	if parent == nil {
@@ -39,7 +39,7 @@ func Run(tty bool, volumeConfigs string, res *subsystems.ResourceConfig, contain
 
 	// 配置 cgroup
 	cgroupManager := cgroups.NewCgroupManager(strings.Join([]string{"mydocker-cgroup", container.ContainerId}, "_"))
-	if tty {
+	if exitRemove {
 		defer cgroupManager.Destory()
 	}
 	log.Infof("cgroup name is %s", cgroupManager.Path)
@@ -52,14 +52,16 @@ func Run(tty bool, volumeConfigs string, res *subsystems.ResourceConfig, contain
 	if tty {
 		parent.Wait()
 
-		// 删除容器信息文件
-		DeleteContainerInfo(container.ContainerId)
+		if exitRemove {
+			// 删除容器信息文件
+			DeleteContainerInfo(container.ContainerId)
 
-		// 删除文件系统
-		dataUrl := filepath.Join("/root/data", container.ContainerId)
-		mountUrl := filepath.Join(dataUrl, "merged")
-		if err := container.DeleteWorkspace(dataUrl, mountUrl, volumeConfigs); err != nil {
-			log.Errorf("overlay filesystem delete failed: %v", err)
+			// 删除文件系统
+			dataUrl := filepath.Join("/root/data", container.ContainerId)
+			mountUrl := filepath.Join(dataUrl, "merged")
+			if err := container.DeleteWorkspace(dataUrl, mountUrl, volumeConfigs); err != nil {
+				log.Errorf("overlay filesystem delete failed: %v", err)
+			}
 		}
 	}
 }

@@ -1,12 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"text/tabwriter"
 
@@ -51,21 +48,7 @@ func getContainerInfoInDir(dir fs.DirEntry) (*container.ContainerInfo, error) {
 
 	r, _ := regexp.Compile(`^\d{6}$`)
 	if r.MatchString(containerId) {
-		configFileDir := fmt.Sprintf(container.DefaultInfoLocation, containerId)
-		configFileName := filepath.Join(configFileDir, container.ConfigFileName)
-		content, err := ioutil.ReadFile(configFileName)
-		if err != nil {
-			err = fmt.Errorf("read file %s error: %v", configFileName, err)
-			return nil, err
-		}
-
-		var containerInfo container.ContainerInfo
-		if err := json.Unmarshal(content, &containerInfo); err != nil {
-			err = fmt.Errorf("json unmarshal error: %v", err)
-			return nil, err
-		}
-
-		return &containerInfo, nil
+		return container.GetContainerInfo(containerId)
 	} else {
 		return nil, nil
 	}
