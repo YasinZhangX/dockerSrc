@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/YasinZhangX/dockerSrc/cgroups/subsystems"
 	"github.com/YasinZhangX/dockerSrc/container"
@@ -137,5 +138,26 @@ var logCommand = cli.Command{
 
 		containerId := context.Args().Get(0)
 		return printContainerLog(containerId)
+	},
+}
+
+var execCommand = cli.Command{
+	Name:  "exec",
+	Usage: "exec a command into container",
+	Action: func(context *cli.Context) error {
+		// This is for callback
+		if os.Getenv(ENV_EXEC_PID) != "" {
+			log.Infof("pid callback pid %d", os.Getgid())
+			return nil
+		}
+
+		if len(context.Args()) < 2 {
+			return fmt.Errorf("missing container name or command")
+		}
+		containerName := context.Args().Get(0)
+		var commandArray []string
+		commandArray = append(commandArray, context.Args().Tail()...)
+		ExecContainer(containerName, commandArray)
+		return nil
 	},
 }
