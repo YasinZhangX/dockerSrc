@@ -129,7 +129,7 @@ func RecordContainerInfo(containerInfo *ContainerInfo) error {
 	}
 	jsonStr := string(jsonBytes)
 
-	dirUrl := fmt.Sprintf(DefaultInfoLocation, ContainerId)
+	dirUrl := fmt.Sprintf(DefaultInfoLocation, containerInfo.Id)
 	if err := os.MkdirAll(dirUrl, 0622); err != nil {
 		return fmt.Errorf("mkdir %s error: %v", dirUrl, err)
 	}
