@@ -18,9 +18,9 @@ import (
 )
 
 func Run(tty bool, exitRemove bool, volumeConfigs string, res *subsystems.ResourceConfig,
-	containerName string, imageName string, cmdArray []string) {
+	containerName string, imageName string, envs []string, cmdArray []string) {
 	// 初始化父进程和写管道
-	parent, writePipe := container.NewParentProcess(tty, volumeConfigs, imageName)
+	parent, writePipe := container.NewParentProcess(tty, volumeConfigs, imageName, envs)
 	if parent == nil {
 		log.Errorf("new parent process error")
 		return

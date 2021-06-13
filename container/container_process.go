@@ -29,7 +29,7 @@ type ContainerInfo struct {
 	Status       string   `json:"status"`     // 容器的状态
 }
 
-func NewParentProcess(tty bool, volumeConfigs string, imageName string) (*exec.Cmd, *os.File) {
+func NewParentProcess(tty bool, volumeConfigs string, imageName string, envs []string) (*exec.Cmd, *os.File) {
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		log.Errorf("new pipe error %v", err)
@@ -64,6 +64,9 @@ func NewParentProcess(tty bool, volumeConfigs string, imageName string) (*exec.C
 
 	// 传入管道文件读取端的句柄
 	cmd.ExtraFiles = []*os.File{readPipe}
+
+	// 配置环境变量
+	cmd.Env = append(os.Environ(), envs...)
 
 	// 创建 overlay 文件系统
 	imgUrl := filepath.Join("/root/data", "img")

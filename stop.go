@@ -1,6 +1,7 @@
 package main
 
 import (
+	"regexp"
 	"strconv"
 	"syscall"
 
@@ -22,8 +23,11 @@ func stopContainer(containerId string) {
 	}
 
 	if err := syscall.Kill(pidInt, syscall.SIGTERM); err != nil {
-		log.Errorf("stop container %s error: %v", containerId, err)
-		return
+		r, _ := regexp.Compile(`.*no such process.*`)
+		if !r.MatchString(err.Error()) {
+			log.Errorf("stop container %s error: %v", containerId, err)
+			return
+		}
 	}
 
 	containerInfo.Status = container.STOP

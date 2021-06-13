@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -33,7 +35,22 @@ func ExecContainer(containerId string, cmdArray []string) {
 	os.Setenv(ENV_EXEC_PID, pid)
 	os.Setenv(ENV_EXEC_CMD, cmdStr)
 
+	containerEnvs := getEnvsByPid(pid)
+	cmd.Env = append(os.Environ(), containerEnvs...)
+
 	if err := cmd.Run(); err != nil {
 		log.Errorf("exec container %s error: %v", containerId, err)
 	}
+}
+
+func getEnvsByPid(pid string) []string {
+	envFilePath := fmt.Sprintf("/proc/%s/environ", pid)
+	contentBytes, err := ioutil.ReadFile(envFilePath)
+	if err != nil {
+		log.Errorf("read file %s error: %v", envFilePath, err)
+		return nil
+	}
+
+	// env split by \u0000
+	return strings.Split(string(contentBytes), "\u0000")
 }
