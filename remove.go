@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	// "os"
 	// "os/exec"
 	"path/filepath"
 	"strings"
+
 	// "time"
 
 	"github.com/YasinZhangX/dockerSrc/cgroups"
@@ -26,12 +28,18 @@ func RemoveContainer(containerId string) error {
 		return err
 	}
 
-	if err := deleteContainerInfo(containerId); err != nil {
+	// get volume config
+	volumeConfigArr := containerInfo.VoluemConfig
+
+	if err := deleteFileSystem(containerId, strings.Join(volumeConfigArr, ",")); err != nil {
 		return err
 	}
 
-	if err := deleteFileSystem(containerId); err != nil {
-		return err
+	if err := deleteContainerInfo(containerId); err != nil {
+		r, _ := regexp.Compile(`.*no such file.*`)
+		if !r.MatchString(err.Error()) {
+			return err
+		}
 	}
 
 	return nil
@@ -49,10 +57,10 @@ func deleteContainerInfo(containerId string) error {
 }
 
 // 删除文件系统
-func deleteFileSystem(containerId string) error {
+func deleteFileSystem(containerId string, volumeConfigs string) error {
 	dataUrl := filepath.Join("/root/data", containerId)
 	mountUrl := filepath.Join(dataUrl, "merged")
-	if err := container.DeleteWorkspace(dataUrl, mountUrl, ""); err != nil {
+	if err := container.DeleteWorkspace(dataUrl, mountUrl, volumeConfigs); err != nil {
 		return fmt.Errorf("overlay filesystem delete failed: %v", err)
 	}
 

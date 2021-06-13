@@ -10,7 +10,7 @@ import (
 
 func CommitContainer(containerId string, imageName string) {
 	mntURL := filepath.Join("/root/data", containerId, "merged")
-	imageTar := "/root/" + imageName + ".tar"
+	imageTar := "/root/data/img/tar" + imageName + ".tar"
 	fmt.Printf("%s", imageTar)
 	if _, err := exec.Command("tar", "-czf", imageTar, "-C", mntURL, ".").CombinedOutput(); err != nil {
 		log.Errorf("Tar folder %s error %v", mntURL, err)

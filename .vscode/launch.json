@@ -21,6 +21,14 @@
             "args": ["ps"]
         },
         {
+            "name": "Launch Package(rm)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}",
+            "args": ["rm", "644826"]
+        },
+        {
             "name": "Launch file",
             "type": "go",
             "request": "launch",

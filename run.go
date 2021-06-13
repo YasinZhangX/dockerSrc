@@ -17,9 +17,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(tty bool, exitRemove bool, volumeConfigs string, res *subsystems.ResourceConfig, containerName string, cmdArray []string) {
+func Run(tty bool, exitRemove bool, volumeConfigs string, res *subsystems.ResourceConfig,
+	containerName string, imageName string, cmdArray []string) {
 	// 初始化父进程和写管道
-	parent, writePipe := container.NewParentProcess(tty, volumeConfigs)
+	parent, writePipe := container.NewParentProcess(tty, volumeConfigs, imageName)
 	if parent == nil {
 		log.Errorf("new parent process error")
 		return

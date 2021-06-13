@@ -77,7 +77,11 @@ var runCommand = cli.Command{
 			cmdArray = append(cmdArray, arg)
 		}
 
-		Run(tty, exitRemove, volumeConfigs, resConf, containerName, cmdArray)
+		// get image Name
+		imageName := cmdArray[0]
+		cmdArray = cmdArray[1:]
+
+		Run(tty, exitRemove, volumeConfigs, resConf, containerName, imageName, cmdArray)
 		return nil
 	},
 }
